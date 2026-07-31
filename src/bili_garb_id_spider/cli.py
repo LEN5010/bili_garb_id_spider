@@ -32,7 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
     scan = subparsers.add_parser("scan", help="抓取排行榜和用户卡片")
     scan.add_argument("--act-id", type=positive_int, required=True)
     scan.add_argument("--page-size", type=positive_int, default=20)
-    scan.add_argument("--max-pages", type=positive_int)
+    scan.add_argument(
+        "--max-pages",
+        type=positive_int,
+        help="最多读取的排行榜页数；无论此值为何，均只处理前 1000 个榜位",
+    )
     scan.add_argument("--limit-users", type=positive_int)
     scan.add_argument("--concurrency", type=positive_int, default=2)
     scan.add_argument("--delay-min", type=float, default=0.8)

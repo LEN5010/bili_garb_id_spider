@@ -81,13 +81,13 @@ def choose_card(cards: list[CollectionCard]) -> CollectionCard | None:
 def choose_scan_scope() -> tuple[int | None, int | None]:
     print("\n抓取范围：")
     print("  [1] 快速测试（1 页排行榜、3 位用户）")
-    print("  [2] 完整抓取")
-    print("  [3] 自定义")
+    print("  [2] 完整抓取（最多 1000 个榜位，支持断点续跑）")
+    print("  [3] 自定义（仍不超过排行榜前 1000 名）")
     choice = ask_number("请选择", minimum=1, maximum=3, default=1)
     if choice == 1:
         return 1, 3
     if choice == 2:
-        return None, None
+        return 50, None
     return (
         ask_optional_positive_int("最多抓取排行榜页数"),
         ask_optional_positive_int("最多抓取用户数"),
@@ -132,7 +132,8 @@ async def search_and_scan() -> None:
     print(
         f"\n即将抓取《{collection.name}》，act_id={collection.act_id}；{focus}。\n"
         "用户卡片接口一次会返回该用户在收藏集内的全部卡片，"
-        "因此工具会完整保存，再按所选卡片筛选结果。"
+        "因此工具会完整保存，再按所选卡片筛选结果。\n"
+        "完整抓取最多遍历排行榜前 1000 个榜位；隐藏 UID 的榜位会跳过。"
     )
     if ask_number("开始抓取？[1] 开始 [0] 返回", minimum=0, maximum=1, default=1) == 0:
         return

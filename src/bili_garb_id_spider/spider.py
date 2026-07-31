@@ -9,6 +9,7 @@ from .storage import Storage
 
 
 ProgressCallback = Callable[[str], None]
+MAX_RANKING_POSITIONS = 1000
 
 
 class Spider:
@@ -30,15 +31,35 @@ class Spider:
         page_size: int = 20,
         max_pages: int | None = None,
     ) -> int:
+        if page_size <= 0:
+            raise ValueError("page_size must be positive")
+
         total = 0
         page = 1
-        while max_pages is None or page <= max_pages:
+        page_limit = (MAX_RANKING_POSITIONS + page_size - 1) // page_size
+        if max_pages is not None:
+            page_limit = min(page_limit, max_pages)
+
+        while page <= page_limit:
             data = await self.client.get_ranking(act_id, page, page_size)
+            raw_list = data.get("list") or []
             users = parse_ranking_users(data, page, page_size)
+            users = [
+                user
+                for user in users
+                if user.ranking_position <= MAX_RANKING_POSITIONS
+            ]
             self.storage.upsert_ranking_users(act_id, users)
             total += len(users)
-            self.progress(f"排行榜第 {page} 页：{len(users)} 位用户，累计 {total}")
-            if len(users) < page_size:
+            self.progress(
+                f"排行榜第 {page} 页：{len(raw_list)} 个榜位，"
+                f"{len(users)} 位可抓用户，累计 {total}"
+            )
+
+            # Some ranked users hide their UID. They still occupy a position in
+            # the raw list, so the number of parsed users cannot determine
+            # whether another page exists.
+            if not raw_list or len(raw_list) < page_size:
                 break
             page += 1
         return total
