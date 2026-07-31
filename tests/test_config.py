@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from bili_garb_id_spider.config import (
@@ -40,4 +41,5 @@ def test_save_credentials_round_trip(tmp_path: Path) -> None:
     )
     save_credentials(env_file, original)
     assert load_credentials(env_file) == original
-    assert env_file.stat().st_mode & 0o777 == 0o600
+    if os.name != "nt":
+        assert env_file.stat().st_mode & 0o777 == 0o600

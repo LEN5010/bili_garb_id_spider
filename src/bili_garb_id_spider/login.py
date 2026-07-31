@@ -65,5 +65,5 @@ async def qr_login(env_file: Path = Path(".env")) -> Credentials | None:
             "请稍后重试，或按 README 手动填写 .env"
         )
     save_credentials(env_file, credentials)
-    print(f"登录成功，凭据已安全保存到 {env_file}（权限 600）。")
+    print(f"登录成功，凭据已保存到 {env_file}，请勿将该文件发送给他人。")
     return credentials

@@ -96,7 +96,7 @@ def load_credentials(
 
 
 def save_credentials(path: Path, credentials: Credentials) -> None:
-    """Persist credentials in a local dotenv file with owner-only permissions."""
+    """Persist credentials locally; apply owner-only mode on POSIX systems."""
     path.parent.mkdir(parents=True, exist_ok=True)
 
     def safe(value: str) -> str:
