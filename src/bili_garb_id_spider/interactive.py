@@ -168,11 +168,11 @@ async def search_and_scan() -> None:
                 f"  {row['card_name']}（{row['card_type_id']}）："
                 f"{row['owner_count']} 位持有者，{row['instance_count']} 个编号{marker}"
             )
-        lucky = input("\n输入幸运号码查找（多个用空格分隔，回车跳过）: ").split()
-        if lucky:
+        card_ids = input("\n输入要查找的 ID（多个用空格分隔，回车跳过）: ").split()
+        if card_ids:
             rows = storage.find_cards(
                 collection.act_id,
-                lucky,
+                card_ids,
                 "exact",
                 selected_card.card_type_id if selected_card else None,
             )
@@ -190,9 +190,9 @@ def show_status() -> None:
             )
 
 
-def find_lucky_number() -> None:
+def find_id() -> None:
     act_id = ask_number("请输入 act_id", minimum=1, maximum=2**63 - 1)
-    patterns = input("请输入幸运号码（多个用空格分隔）: ").split()
+    patterns = input("请输入要查找的 ID（多个用空格分隔）: ").split()
     if not patterns:
         print("未输入号码。")
         return
@@ -229,12 +229,12 @@ def print_menu() -> None:
     credentials = load_credentials(ENV_FILE)
     state = "已登录" if credentials.authenticated else "未登录"
     print("\n" + "=" * 56)
-    print(f"Bilibili 收藏集幸运号码工具    当前状态：{state}")
+    print(f"Bilibili 收藏集卡片 ID 工具    当前状态：{state}")
     print("=" * 56)
     print("  [1] 二维码登录 / 更新登录")
     print("  [2] 按名称搜索收藏集并开始抓取")
     print("  [3] 查看抓取进度和卡片统计")
-    print("  [4] 查找幸运号码")
+    print("  [4] 查找 ID")
     print("  [0] 退出")
 
 
@@ -259,7 +259,7 @@ async def interactive_main() -> None:
             elif choice == 3:
                 show_status()
             elif choice == 4:
-                find_lucky_number()
+                find_id()
         except KeyboardInterrupt:
             print("\n操作已取消，已保存的抓取数据不会丢失。")
         except Exception as exc:

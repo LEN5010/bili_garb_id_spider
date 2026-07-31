@@ -3,23 +3,38 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 
+from typing import Any
+
 from .config import Credentials, save_credentials
 
 
-def credentials_from_cookie_dict(cookies: dict[str, str]) -> Credentials:
+def credentials_from_cookie_dict(
+    cookies: dict[str, Any],
+    credential: Any | None = None,
+) -> Credentials:
+    normalized = {str(key).lower(): str(value or "") for key, value in cookies.items()}
+
+    def choose(cookie_name: str, attribute_name: str) -> str:
+        value = normalized.get(cookie_name.lower(), "")
+        if value:
+            return value
+        return str(getattr(credential, attribute_name, "") or "")
+
     return Credentials(
-        sessdata=str(cookies.get("SESSDATA") or ""),
-        bili_jct=str(cookies.get("bili_jct") or ""),
-        buvid3=str(cookies.get("buvid3") or ""),
-        dede_user_id=str(cookies.get("DedeUserID") or ""),
-        ac_time_value=str(cookies.get("ac_time_value") or ""),
+        sessdata=choose("SESSDATA", "sessdata"),
+        bili_jct=choose("bili_jct", "bili_jct"),
+        buvid3=choose("buvid3", "buvid3"),
+        dede_user_id=choose("DedeUserID", "dedeuserid"),
+        ac_time_value=choose("ac_time_value", "ac_time_value"),
     )
 
 
 async def qr_login(env_file: Path = Path(".env")) -> Credentials | None:
     from bilibili_api import login_v2
 
-    qr = login_v2.QrCodeLogin(platform=login_v2.QrCodeLoginChannel.WEB)
+    # TV 登录响应直接返回 cookie_info；Web 登录依赖从跳转 URL 解析
+    # Cookie，当前部分账号流程可能出现 DONE 但 SESSDATA 为空。
+    qr = login_v2.QrCodeLogin(platform=login_v2.QrCodeLoginChannel.TV)
     await qr.generate_qrcode()
     print("\n请使用哔哩哔哩手机客户端扫描二维码并确认登录：\n")
     print(qr.get_qrcode_terminal())
@@ -42,9 +57,13 @@ async def qr_login(env_file: Path = Path(".env")) -> Credentials | None:
             await asyncio.sleep(1)
 
     credential = qr.get_credential()
-    credentials = credentials_from_cookie_dict(credential.get_cookies())
+    cookies = await credential.get_buvid_cookies()
+    credentials = credentials_from_cookie_dict(cookies, credential)
     if not credentials.authenticated:
-        raise RuntimeError("二维码登录完成，但未取得 SESSDATA")
+        raise RuntimeError(
+            "登录接口已确认成功，但响应中仍没有 SESSDATA；"
+            "请稍后重试，或按 README 手动填写 .env"
+        )
     save_credentials(env_file, credentials)
     print(f"登录成功，凭据已安全保存到 {env_file}（权限 600）。")
     return credentials

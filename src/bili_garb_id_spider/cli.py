@@ -57,7 +57,7 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--act-id", type=positive_int, required=True)
     export.add_argument("--out", type=Path, default=Path("output/cards.csv"))
 
-    find = subparsers.add_parser("find", help="查找幸运号码")
+    find = subparsers.add_parser("find", help="查找 ID")
     find.add_argument("--act-id", type=positive_int, required=True)
     find.add_argument("patterns", nargs="+", help="一个或多个号码/正则表达式")
     find.add_argument(
