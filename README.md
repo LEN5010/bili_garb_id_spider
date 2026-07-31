@@ -5,9 +5,10 @@
 这个工具直接调用页面使用的 JSON 接口，不模拟点击，也不需要注入 JS Bridge：
 
 - 排行榜：`/x/vas/dlc_act/act/top/list`
-- 用户卡片：`/x/vas/user/dlc/card/list`
+- 用户图鉴摘要：`/x/vas/user/dlc/card/list`
+- 用户完整卡片编号：`/x/vas/user/dlc/right/card`
 
-后一个接口需要已登录账号的 Cookie。工具不会把 Cookie 写进 SQLite 或 CSV，也不会在日志中打印 Cookie。
+完整卡片编号接口需要已登录账号的 Cookie。工具不会把 Cookie 写进 SQLite 或 CSV，也不会在日志中打印 Cookie。
 
 ## 安装
 
@@ -100,7 +101,8 @@ uv run bili-garb-spider status --act-id 109318
 
 ## 查找 ID
 
-精确匹配会保留前导零，并自动忽略开头的 `#`：
+精确匹配会自动兼容 `1107`、`001107`、`#001107` 和 `CD.001107`
+这几种输入形式；数据库与导出文件仍保留原始前导零：
 
 ```bash
 uv run bili-garb-spider find --act-id 109318 005010 2233

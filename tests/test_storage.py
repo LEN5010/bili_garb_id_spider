@@ -62,12 +62,14 @@ def test_save_resume_find_and_export(tmp_path: Path) -> None:
         assert storage.pending_users(109318, retry_errors=True) == []
 
         exact = storage.find_cards(109318, ["#005010"], "exact")
+        exact_numeric = storage.find_cards(109318, ["5010"], "exact")
         contains = storage.find_cards(109318, ["22"], "contains")
         regex = storage.find_cards(109318, [r"^#?22\d\d$"], "regex")
         filtered = storage.find_cards(
             109318, ["005010"], "exact", card_type_id=999
         )
         assert [row["card_id"] for row in exact] == [90001]
+        assert [row["card_id"] for row in exact_numeric] == [90001]
         assert [row["card_id"] for row in contains] == [90002]
         assert [row["card_id"] for row in regex] == [90002]
         assert filtered == []
@@ -94,3 +96,23 @@ def test_error_retry_policy(tmp_path: Path) -> None:
         storage.mark_error(109318, 10001, "temporary error")
         assert len(storage.pending_users(109318, retry_errors=True)) == 1
         assert storage.pending_users(109318, retry_errors=False) == []
+
+
+def test_summary_only_user_is_automatically_refetched(tmp_path: Path) -> None:
+    summary_payload = {
+        "card_list": [
+            {
+                "card_no": "CD.001107",
+                "card_owned_cnt": 3,
+                "card_item": {
+                    "card_type_id": 701,
+                    "card_name": "测试卡片",
+                    "card_id_list": None,
+                },
+            }
+        ]
+    }
+    with Storage(tmp_path / "test.sqlite3") as storage:
+        storage.upsert_ranking_users(109318, [ranking_user()])
+        storage.save_user_cards(109318, 10001, summary_payload)
+        assert len(storage.pending_users(109318, retry_errors=True)) == 1

@@ -119,7 +119,7 @@ def output_matches(rows: list, out: Path | None) -> None:
         "status",
         "is_transfer",
     ]
-    print(f"匹配到 {len(rows)} 个卡片编号")
+    print(f"匹配到 {len(rows)} 个卡片 ID")
     for row in rows:
         print(
             f"#{row['ranking_position']} {row['uname']} ({row['uid']}) | "

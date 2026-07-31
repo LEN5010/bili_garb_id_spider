@@ -129,7 +129,26 @@ class Storage:
             FROM ranking_users AS r
             LEFT JOIN user_fetch_state AS s
               ON s.act_id = r.act_id AND s.uid = r.uid
-            WHERE r.act_id = ? AND (s.status IS NULL OR s.status NOT IN {statuses})
+            WHERE r.act_id = ? AND (
+                s.status IS NULL
+                OR s.status NOT IN {statuses}
+                OR (
+                    s.status = 'ok'
+                    AND EXISTS (
+                        SELECT 1
+                        FROM card_types AS t
+                        WHERE t.act_id = r.act_id
+                          AND t.uid = r.uid
+                          AND t.owned_count > 0
+                    )
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM card_instances AS c
+                        WHERE c.act_id = r.act_id
+                          AND c.uid = r.uid
+                    )
+                )
+            )
             ORDER BY r.ranking_position
         """
         params: list[Any] = [act_id]
@@ -375,4 +394,9 @@ class Storage:
 
 
 def normalize_card_number(value: str) -> str:
-    return str(value).strip().removeprefix("#").strip()
+    normalized = str(value).strip().removeprefix("#").strip()
+    if normalized.upper().startswith("CD."):
+        normalized = normalized[3:]
+    if normalized.isdigit():
+        return str(int(normalized))
+    return normalized.casefold()

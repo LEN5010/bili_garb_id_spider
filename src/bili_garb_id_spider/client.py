@@ -141,14 +141,35 @@ class BilibiliClient:
     async def get_user_cards(self, act_id: int, uid: int) -> dict[str, Any]:
         if not self.credentials.authenticated:
             raise AuthenticationRequired(-101, "抓取用户卡片需要 BILI_SESSDATA")
-        params: dict[str, Any] = {"act_id": act_id, "scene": 1, "vmid": uid}
-        if self.credentials.buvid3:
-            params["buvid"] = self.credentials.buvid3
-        return await self._get(
-            "/x/vas/user/dlc/card/list",
-            params=params,
-            referer=(
-                "https://www.bilibili.com/h5/mall/equity-link/digital-card"
-                f"?navhide=1&act_id={act_id}&vmid={uid}&from=dlc&f_source=shop"
-            ),
-        )
+        page = 1
+        page_size = 100
+        merged: dict[str, Any] = {}
+        card_list: list[dict[str, Any]] = []
+        while True:
+            params: dict[str, Any] = {
+                "act_id": act_id,
+                "scene": 1,
+                "vmid": uid,
+                "pn": page,
+                "ps": page_size,
+            }
+            if self.credentials.buvid3:
+                params["buvid"] = self.credentials.buvid3
+            data = await self._get(
+                "/x/vas/user/dlc/right/card",
+                params=params,
+                referer=(
+                    "https://www.bilibili.com/h5/mall/digital-card/holder"
+                    f"?hybrid_set_header=2&act_id={act_id}&vmid={uid}"
+                ),
+            )
+            if not merged:
+                merged = dict(data)
+            current = data.get("card_list") or []
+            card_list.extend(item for item in current if isinstance(item, dict))
+            total = int(data.get("total") or len(card_list))
+            if not current or len(card_list) >= total:
+                break
+            page += 1
+        merged["card_list"] = card_list
+        return merged

@@ -8,12 +8,17 @@ from bili_garb_id_spider.config import Credentials
 @pytest.mark.asyncio
 async def test_card_request_injects_vmid_and_buvid() -> None:
     async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/x/vas/user/dlc/right/card"
         assert request.url.params["act_id"] == "109318"
         assert request.url.params["vmid"] == "10001"
         assert request.url.params["scene"] == "1"
+        assert request.url.params["pn"] == "1"
+        assert request.url.params["ps"] == "100"
         assert request.url.params["buvid"] == "device-id"
         assert "SESSDATA=session" in request.headers["cookie"]
-        return httpx.Response(200, json={"code": 0, "data": {"card_list": []}})
+        return httpx.Response(
+            200, json={"code": 0, "data": {"card_list": [], "total": 0}}
+        )
 
     transport = httpx.MockTransport(handler)
     async with BilibiliClient(
@@ -23,7 +28,39 @@ async def test_card_request_injects_vmid_and_buvid() -> None:
         transport=transport,
     ) as client:
         result = await client.get_user_cards(109318, 10001)
-    assert result == {"card_list": []}
+    assert result == {"card_list": [], "total": 0}
+
+
+@pytest.mark.asyncio
+async def test_card_request_merges_all_pages() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        page = int(request.url.params["pn"])
+        card = {
+            "card_item": {
+                "card_type_id": 700 + page,
+                "card_id_list": [{"card_id": 90000 + page, "card_no": str(page)}],
+            }
+        }
+        return httpx.Response(
+            200,
+            json={
+                "code": 0,
+                "data": {"card_list": [card], "pn": page, "ps": 100, "total": 2},
+            },
+        )
+
+    transport = httpx.MockTransport(handler)
+    async with BilibiliClient(
+        Credentials(sessdata="session"),
+        delay_min=0,
+        delay_max=0,
+        transport=transport,
+    ) as client:
+        result = await client.get_user_cards(109318, 10001)
+    assert [item["card_item"]["card_type_id"] for item in result["card_list"]] == [
+        701,
+        702,
+    ]
 
 
 @pytest.mark.asyncio
