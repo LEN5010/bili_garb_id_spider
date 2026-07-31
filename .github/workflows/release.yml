@@ -1,0 +1,66 @@
+name: Build Windows Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v8
+        with:
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Install locked dependencies
+        run: uv sync --locked --dev --no-editable
+
+      - name: Run tests
+        run: uv run python -m pytest
+
+      - name: Build application
+        run: uv run pyinstaller --noconfirm --clean packaging/bili-garb-id-spider.spec
+
+      - name: Prepare ZIP
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_TYPE -eq "tag") {
+            $env:GITHUB_REF_NAME
+          } else {
+            "dev-$env:GITHUB_RUN_NUMBER"
+          }
+          $archive = "bili-garb-id-spider-$version-windows-x64.zip"
+          Copy-Item "release\windows\启动工具.bat" "dist\bili-garb-id-spider\"
+          Copy-Item "release\windows\使用说明.txt" "dist\bili-garb-id-spider\"
+          Compress-Archive -Path "dist\bili-garb-id-spider" -DestinationPath $archive
+          "RELEASE_ARCHIVE=$archive" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: ${{ env.RELEASE_ARCHIVE }}
+          if-no-files-found: error
+
+      - name: Create GitHub Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$env:GITHUB_REF_NAME" 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create "$env:GITHUB_REF_NAME" --generate-notes --title "$env:GITHUB_REF_NAME"
+          }
+          gh release upload "$env:GITHUB_REF_NAME" "$env:RELEASE_ARCHIVE" --clobber

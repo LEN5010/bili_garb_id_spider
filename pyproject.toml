@@ -15,6 +15,7 @@ bili-garb-wizard = "bili_garb_id_spider.interactive:main"
 
 [dependency-groups]
 dev = [
+  "pyinstaller>=6.16,<7",
   "pytest>=8.4.1,<9",
   "pytest-asyncio>=1.1.0,<2",
 ]

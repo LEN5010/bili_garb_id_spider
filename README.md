@@ -8,24 +8,37 @@
 - 用户图鉴摘要：`/x/vas/user/dlc/card/list`
 - 用户完整卡片编号：`/x/vas/user/dlc/right/card`
 
-## 安装
+## Windows 免安装版（推荐）
+
+普通用户不需要安装 Python、uv 或 Git：
+
+1. 打开 [Releases 下载页面](https://github.com/LEN5010/bili_garb_id_spider/releases/latest)；
+2. 下载名称以 `windows-x64.zip` 结尾的文件；
+3. **完整解压 ZIP**；
+4. 双击 `启动工具.bat`；
+5. 第一次使用请选择 `[1]`，用哔哩哔哩手机客户端扫码登录。
+
+如果 Windows 显示“已保护你的电脑”，请确认文件来自上述官方项目页面，
+然后点击“更多信息”→“仍要运行”。当前程序未购买代码签名证书，因此可能
+出现这项提示。
+
+程序会在解压目录生成 `.env` 和 `data/garb.sqlite3`。前者是登录凭据，
+后者保存抓取进度；升级版本时请保留它们。不要将 `.env` 发送给其他人。
+
+## 源码运行（macOS、Linux 和开发者）
 
 需要 Python 3.11+ 和 [uv](https://docs.astral.sh/uv/)：
 
 ```bash
+git clone https://github.com/LEN5010/bili_garb_id_spider.git
+cd bili_garb_id_spider
 uv sync --dev --no-editable
-uv run bili-garb-spider --help
-```
-
-## 交互模式（推荐）
-
-直接运行：
-
-```bash
 uv run python run.py
 ```
 
-随后使用数字菜单即可完成：
+## 交互菜单
+
+Windows 免安装版和源码版使用相同的数字菜单：
 
 1. 使用手机客户端扫描终端二维码登录；
 2. 输入名称搜索收藏集；
@@ -36,9 +49,13 @@ uv run python run.py
 
 用户卡片接口一次会返回该用户在当前收藏集内的全部卡片，因此即使选择某一张重点卡片，工具也会把其他卡片一起保存，不会增加请求次数。所选卡片用于限定 ID 查找结果。
 
-## 配置登录凭据
+## 登录凭据
 
-复制示例配置：
+推荐直接在菜单中选择 `[1]` 扫码登录。凭据会自动保存到 `.env`，工具
+不会要求输入账号密码。
+
+如需手动配置，可以复制示例配置：
+
 
 ```bash
 cp .env.example .env
@@ -54,7 +71,7 @@ Cookie 相当于登录凭据，请勿上传、提交或发给他人。
 
 二维码登录使用 TV 通道，因为该通道会在成功响应中直接返回 Cookie；Web 通道在部分账号流程中可能显示登录成功，却没有返回可解析的 `SESSDATA`。
 
-## 抓取 (如果你只想使用脚本。接下来的内容可以不用看)
+## 命令行模式（进阶）
 
 先用少量用户验证登录和接口：
 
