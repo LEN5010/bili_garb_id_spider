@@ -1,0 +1,31 @@
+[project]
+name = "bili-garb-id-spider"
+version = "0.1.0"
+description = "Scan Bilibili digital-card collector rankings and search owned card numbers."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "bilibili-api-python>=17,<18",
+  "httpx>=0.28.1,<1",
+]
+
+[project.scripts]
+bili-garb-spider = "bili_garb_id_spider.cli:main"
+bili-garb-wizard = "bili_garb_id_spider.interactive:main"
+
+[dependency-groups]
+dev = [
+  "pytest>=8.4.1,<9",
+  "pytest-asyncio>=1.1.0,<2",
+]
+
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+testpaths = ["tests"]
