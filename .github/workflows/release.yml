@@ -32,6 +32,14 @@ jobs:
       - name: Build application
         run: uv run pyinstaller --noconfirm --clean packaging/bili-garb-id-spider.spec
 
+      - name: Smoke test packaged executable
+        shell: pwsh
+        run: |
+          "0" | & "dist\bili-garb-id-spider\bili-garb-id-spider.exe"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Packaged executable exited with code $LASTEXITCODE"
+          }
+
       - name: Prepare ZIP
         shell: pwsh
         run: |
@@ -45,6 +53,23 @@ jobs:
           Copy-Item "release\windows\使用说明.txt" "dist\bili-garb-id-spider\"
           Compress-Archive -Path "dist\bili-garb-id-spider" -DestinationPath $archive
           "RELEASE_ARCHIVE=$archive" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Verify ZIP contents
+        shell: pwsh
+        run: |
+          $verifyDir = Join-Path $env:RUNNER_TEMP "release-verify"
+          Expand-Archive -Path $env:RELEASE_ARCHIVE -DestinationPath $verifyDir
+          $root = Join-Path $verifyDir "bili-garb-id-spider"
+          $required = @(
+            (Join-Path $root "bili-garb-id-spider.exe"),
+            (Join-Path $root "启动工具.bat"),
+            (Join-Path $root "使用说明.txt")
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path -LiteralPath $path)) {
+              throw "Missing release file: $path"
+            }
+          }
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
