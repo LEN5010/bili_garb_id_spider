@@ -153,3 +153,8 @@ uv run bili-garb-spider export \
 - 用户关闭收藏展示时会记录为 `private`，工具不会尝试绕过隐私设置。
 - 接口是网页内部接口，可能随哔哩哔哩改版而变化。
 - 请仅以合理频率处理公开可见数据，遵守平台规则，不要把结果用于骚扰、画像或其他侵害用户权益的用途。
+
+## 许可证
+
+本项目采用 [GNU Affero General Public License v3.0](LICENSE)，
+SPDX 标识为 `AGPL-3.0-only`。

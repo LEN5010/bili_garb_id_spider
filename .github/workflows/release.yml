@@ -51,6 +51,7 @@ jobs:
           $archive = "bili-garb-id-spider-$version-windows-x64.zip"
           Copy-Item "release\windows\启动工具.bat" "dist\bili-garb-id-spider\"
           Copy-Item "release\windows\使用说明.txt" "dist\bili-garb-id-spider\"
+          Copy-Item "LICENSE" "dist\bili-garb-id-spider\"
           Compress-Archive -Path "dist\bili-garb-id-spider" -DestinationPath $archive
           "RELEASE_ARCHIVE=$archive" | Out-File -FilePath $env:GITHUB_ENV -Append
 
@@ -63,7 +64,8 @@ jobs:
           $required = @(
             (Join-Path $root "bili-garb-id-spider.exe"),
             (Join-Path $root "启动工具.bat"),
-            (Join-Path $root "使用说明.txt")
+            (Join-Path $root "使用说明.txt"),
+            (Join-Path $root "LICENSE")
           )
           foreach ($path in $required) {
             if (-not (Test-Path -LiteralPath $path)) {
